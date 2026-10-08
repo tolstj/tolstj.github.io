@@ -1,0 +1,716 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Шестиугольник на 26 рядов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;600&family=Literata:opsz,wght@7..72,500;7..72,600&display=swap">
+<style>
+/* Layout: a white pattern sheet (pan/zoom chart under a tape-measure round ruler) beside a reference column; one column under 960px */
+:root{
+  --ground:#e8ebee;
+  --sheet:#ffffff;
+  --ink:#15181c;
+  --muted:#58606a;
+  --rule:#d2d7dd;
+  --yarn-a:#1c1d1f;
+  --yarn-b:#b3242c;
+  --on-yarn:#ffffff;
+  --control:#ffffff;
+  --control-hi:#eef1f4;
+  --focus:#2f6fd6;
+  --veil:rgba(255,255,255,.88);
+  --shadow:0 1px 2px rgba(18,22,28,.07),0 6px 20px rgba(18,22,28,.06);
+  --f-display:"Literata",Georgia,"Times New Roman",serif;
+  --f-body:"Golos Text","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0f1114;--sheet:#181b1f;--ink:#e7e9ec;--muted:#9ba3ad;--rule:#2a2f35;
+    --yarn-a:#e6e3de;--yarn-b:#ff6e72;--on-yarn:#111316;
+    --control:#1f2328;--control-hi:#2a3036;--focus:#7aa7ff;--veil:rgba(24,27,31,.88);
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 6px 20px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0f1114;--sheet:#181b1f;--ink:#e7e9ec;--muted:#9ba3ad;--rule:#2a2f35;
+  --yarn-a:#e6e3de;--yarn-b:#ff6e72;--on-yarn:#111316;
+  --control:#1f2328;--control-hi:#2a3036;--focus:#7aa7ff;--veil:rgba(24,27,31,.88);
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 6px 20px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+
+body{background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+*,*::before,*::after{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.page{max-width:1440px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:22px 40px;display:grid;gap:18px}
+.head{display:grid;gap:6px}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(26px,3.2vw,34px);line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.lede{margin:0;color:var(--muted);max-width:72ch}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+/* pattern sheet */
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.ruler{display:flex;align-items:stretch;gap:6px;padding:6px 8px;border-bottom:1px solid var(--rule)}
+.step{flex:none;width:32px;border:1px solid var(--rule);border-radius:6px;background:var(--control);display:grid;place-items:center}
+.step:hover{background:var(--control-hi)}
+.step svg{width:14px;height:14px}
+.ticks{display:flex;gap:1px;overflow-x:auto;flex:1;min-width:0;padding:2px;scrollbar-width:thin;scroll-padding-inline:48px}
+.all{flex:none;padding:0 12px;border:1px solid var(--rule);border-radius:6px;background:var(--control);font-weight:600;font-size:13px;margin-right:6px}
+.all:hover{background:var(--control-hi)}
+.all[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.tick{flex:none;min-width:28px;height:40px;border:0;border-radius:6px;background:transparent;color:var(--c);
+  font-family:var(--f-mono);font-weight:600;font-size:12.5px;font-variant-numeric:tabular-nums;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;padding:0 0 5px}
+.tick::before{content:"";width:1.5px;height:7px;background:currentColor;opacity:.55;border-radius:1px}
+.tick.five::before{height:12px;opacity:.8}
+.tick.a{--c:var(--yarn-a)}
+.tick.b{--c:var(--yarn-b)}
+.tick:hover{background:var(--control-hi)}
+.tick[aria-pressed="true"]{background:var(--c);color:var(--on-yarn)}
+
+.viewer{position:relative;height:clamp(420px,min(115vw,74vh),920px);background:var(--sheet);touch-action:none;cursor:grab;outline:none;user-select:none;-webkit-user-select:none}
+.viewer.dragging{cursor:grabbing}
+.viewer:focus-visible{box-shadow:inset 0 0 0 2px var(--focus)}
+#chart{display:block;width:100%;height:100%}
+#chart *{pointer-events:none}
+.yarn-a{--c:var(--yarn-a)}
+.yarn-b{--c:var(--yarn-b)}
+#chart .st{fill:none;stroke:var(--c);stroke-width:calc(1.35px * var(--k, 1))}
+#chart .ch{fill:none;stroke:var(--c);stroke-width:calc(1.2px * var(--k, 1))}
+#chart.focus .on .st{stroke-width:calc(1.35px * var(--kon, 1))}
+#chart.focus .on .ch{stroke-width:calc(1.2px * var(--kon, 1))}
+#chart .dt{fill:var(--c);stroke:none}
+#chart .lb{fill:var(--c);font-family:var(--f-body);font-weight:600;font-size:13px}
+#chart .round,#chart .ring{transition:opacity .2s ease}
+#chart.focus .round:not(.on),#chart.focus .ring:not(.on){opacity:.13}
+
+.zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;background:var(--control);border:1px solid var(--rule);border-radius:8px;overflow:hidden;box-shadow:var(--shadow)}
+.zoom button{width:38px;height:38px;border:0;background:transparent;display:grid;place-items:center}
+.zoom button+button{border-top:1px solid var(--rule)}
+.zoom button:hover{background:var(--control-hi)}
+.zoom svg{width:18px;height:18px}
+.chip{position:absolute;left:12px;top:12px;display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;border:1px solid var(--rule);background:var(--control);box-shadow:var(--shadow);font-weight:500;font-size:13.5px}
+.chip:hover{background:var(--control-hi)}
+.chip .dotc{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.hint{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 76px);margin:0;padding:4px 9px;border-radius:6px;background:var(--veil);color:var(--muted);font-size:12px;line-height:1.4;pointer-events:none}
+.h-touch{display:none}
+@media (pointer:coarse){.h-mouse{display:none}.h-touch{display:inline}}
+
+/* reference column */
+.panel{display:grid;gap:14px;min-width:0}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rc{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 18px;align-items:start}
+.rc-num{font-family:var(--f-display);font-weight:600;font-size:64px;line-height:.9;color:var(--c,var(--ink));font-variant-numeric:tabular-nums;min-width:1.2ch}
+.rc-cap{font-size:13px;color:var(--muted);margin-top:6px}
+.stats{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;margin:0;align-content:start}
+.stats dt{color:var(--muted);font-size:13.5px}
+.stats dd{margin:0;font-family:var(--f-mono);font-weight:600;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums}
+.rc-text{margin:14px 0 0;font-size:14.5px}
+.rc-text+.rc-text{margin-top:6px;color:var(--muted);font-size:13.5px}
+.btn{border:1px solid var(--rule);background:var(--control);border-radius:8px;padding:8px 13px;font-weight:500;font-size:14px}
+.btn:hover{background:var(--control-hi)}
+.btn.primary{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9}
+.btn:disabled{opacity:.55;cursor:default}
+.rc-actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+
+.steps{margin:0;padding-left:1.25em;display:grid;gap:9px;font-size:14.5px}
+.steps li::marker{font-family:var(--f-mono);font-weight:600;color:var(--muted)}
+.note{margin:12px 0 0;font-size:13px;color:var(--muted)}
+.abbr{margin:0 0 10px;font-size:13px;color:var(--muted)}
+
+.legend{list-style:none;margin:0;padding:0;display:grid;gap:9px;font-size:14px}
+.legend li{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;align-items:center}
+.legend svg{width:46px;height:30px;color:var(--ink);overflow:visible}
+
+.dl-row{display:flex;gap:8px;flex-wrap:wrap}
+.status{margin:10px 0 0;font-size:13px;color:var(--muted);min-height:1.4em}
+
+@media (max-width:560px){
+  .rc-num{font-size:52px}
+  .hint{font-size:11.5px}
+}
+@media (prefers-reduced-motion: reduce){
+  #chart .round,#chart .ring{transition:none}
+}
+</style>
+
+<div class="page">
+  <header class="head">
+    <h1>Шестиугольник на 26 рядов</h1>
+    <p class="lede">Ваша схема, продолженная по тому же раппорту. Ряды 1–4 такие же, как в оригинале, а дальше в каждом ряду на каждой из шести сторон прибавляется ещё одна группа из 3 ССН.</p>
+  </header>
+
+  <main class="layout">
+    <section class="sheet" aria-label="Схема">
+      <div class="ruler">
+        <button class="step" id="prev" type="button" aria-label="Предыдущий ряд">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg>
+        </button>
+        <div class="ticks" id="ticks" role="group" aria-label="Выделить ряд"></div>
+        <button class="step" id="next" type="button" aria-label="Следующий ряд">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 3 5 5-5 5"/></svg>
+        </button>
+      </div>
+      <div class="viewer" id="viewer" tabindex="0" aria-label="Схема: плюс и минус меняют масштаб, стрелки сдвигают, 0 показывает целиком">
+        <svg id="chart" role="img" aria-label="Схема вязаного шестиугольника из 26 рядов"></svg>
+        <button class="chip yarn-a" id="toStart" type="button" hidden><span class="dotc"></span><span id="toStartText">К началу ряда</span></button>
+        <p class="hint" id="hint"><span class="h-mouse">Колёсико — масштаб, перетаскивание — сдвиг.</span><span class="h-touch">Два пальца — масштаб, один — сдвиг.</span> Нажмите на ряд, чтобы выделить его.</p>
+        <div class="zoom">
+          <button id="zin" type="button" aria-label="Увеличить"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 4v10M4 9h10"/></svg></button>
+          <button id="zout" type="button" aria-label="Уменьшить"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h10"/></svg></button>
+          <button id="zfit" type="button" aria-label="Показать схему целиком"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4M11 3h4v4M15 11v4h-4M7 15H3v-4"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <section class="card" aria-live="polite">
+        <h2 id="rcHead">Мотив целиком</h2>
+        <div class="rc" id="rc">
+          <div>
+            <div class="rc-num" id="rcNum">26</div>
+            <div class="rc-cap" id="rcCap">рядов</div>
+          </div>
+          <dl class="stats" id="rcStats"></dl>
+        </div>
+        <p class="rc-text" id="rcText"></p>
+        <p class="rc-text" id="rcText2"></p>
+        <div class="rc-actions" id="rcActions" hidden>
+          <button class="btn primary" id="goStart" type="button">Показать начало ряда</button>
+          <button class="btn" id="clearSel" type="button">Все ряды</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Как вязать</h2>
+        <ol class="steps">
+          <li><b>Кольцо.</b> 5 в.п., замкнуть с.с.</li>
+          <li><b>1-й ряд</b>, всё в кольцо: 3 в.п. подъёма, 2 ССН, 2 в.п., затем 5 раз [3 ССН, 2 в.п.]. Замкнуть с.с. в 3-ю в.п. подъёма.</li>
+          <li><b>Переход в следующий ряд.</b> С.с. в каждый из двух следующих ССН и в арку из 2 в.п. Так заканчивается каждый ряд.</li>
+          <li><b>2-й ряд.</b> В угловую арку: 3 в.п. подъёма, 2 ССН, 2 в.п., 3 ССН. Затем 5 раз [1 в.п.; в следующую угловую арку 3 ССН, 2 в.п., 3 ССН]; 1 в.п., с.с.</li>
+          <li><b>3–26-й ряды.</b> Углы вяжутся так же, как во 2-м ряду. Между углами в каждую арку из 1 в.п. провязать 3 ССН, группы разделять 1 в.п. Групп на каждой стороне столько же, каков номер ряда.</li>
+        </ol>
+        <p class="note">Чёрный и красный цвет на схеме только помогают различать соседние ряды, как в исходной схеме.</p>
+      </section>
+
+      <section class="card">
+        <h2>Условные обозначения</h2>
+        <ul class="legend">
+          <li><svg viewBox="0 0 46 30" aria-hidden="true"><ellipse cx="23" cy="15" rx="10" ry="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>в.п. — воздушная петля</span></li>
+          <li><svg viewBox="0 0 46 30" aria-hidden="true"><circle cx="23" cy="15" r="2.8" fill="currentColor"/></svg><span>с.с. — соединительный столбик</span></li>
+          <li><svg viewBox="0 0 46 30" aria-hidden="true"><path d="M23 28V3M17 3h12M19.6 17.4l7-3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>ССН — столбик с одним накидом</span></li>
+          <li><svg viewBox="0 0 46 30" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.4"><ellipse cx="23" cy="24" rx="2.6" ry="4.2"/><ellipse cx="23" cy="15" rx="2.6" ry="4.2"/><ellipse cx="23" cy="6" rx="2.6" ry="4.2"/></g></svg><span>3 в.п. подъёма в начале ряда, заменяют первый ССН</span></li>
+          <li><svg viewBox="-24 -24 48 48" aria-hidden="true" id="legendRing"></svg><span>кольцо из 5 в.п.</span></li>
+        </ul>
+      </section>
+
+      <section class="card" id="dl" hidden>
+        <h2>Сохранить схему</h2>
+        <div class="dl-row">
+          <button class="btn primary" id="savePng" type="button">PNG, 3800 px</button>
+          <button class="btn" id="saveSvg" type="button">SVG, вектор</button>
+        </div>
+        <p class="note">Схема целиком лучше всего читается при печати на A3: на листе A4 значки получаются около 1 мм. SVG печатается любого размера без потери чёткости.</p>
+        <p class="status" id="dlStatus" aria-live="polite"></p>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- chart geometry ---------- */
+  function buildGrannyHex(N) {
+    var K = 13.5, E = 10, G = 0.9, CB = 3.5, TK = 2.9, OVX = 7.2, OVY = 2.2, DOT = 1.9, RP = 17;
+    var D2R = Math.PI / 180;
+    function f(v) { return Math.round(v * 10) / 10; }
+    function R(n) { return K * (4 * n + 1) + E; }
+    function SG(n) { return R(n) / (4 * n + 1); }
+    function vtx(r, k) { var a = 60 * k * D2R; return [r * Math.cos(a), -r * Math.sin(a)]; }
+    var dir = [], nrm = [], vdir = [], k;
+    for (k = 0; k < 6; k++) {
+      var a = vtx(1, k), b = vtx(1, k + 1), dx = b[0] - a[0], dy = b[1] - a[1], l = Math.sqrt(dx * dx + dy * dy);
+      dir.push([dx / l, dy / l]);
+      var m = (60 * k + 30) * D2R;
+      nrm.push([Math.cos(m), -Math.sin(m)]);
+      vdir.push([Math.cos(60 * k * D2R), -Math.sin(60 * k * D2R)]);
+    }
+    function P(n, k, s, out) {
+      var v = vtx(R(n), k), d = dir[k], g = SG(n), o = out || 0;
+      return [v[0] + d[0] * s * g + nrm[k][0] * o, v[1] + d[1] * s * g + nrm[k][1] * o];
+    }
+    function add(p, v, t) { return [p[0] + v[0] * t, p[1] + v[1] * t]; }
+    function unit(p, q) { var dx = q[0] - p[0], dy = q[1] - p[1], l = Math.sqrt(dx * dx + dy * dy); return [dx / l, dy / l, l]; }
+    function pt(p) { return f(p[0]) + ' ' + f(p[1]); }
+    function ell(c, rx, ry, ux, uy) {
+      var p1 = [c[0] + ux * rx, c[1] + uy * rx], p2 = [c[0] - ux * rx, c[1] - uy * rx];
+      var arc = 'A' + f(rx) + ' ' + f(ry) + ' ' + f(Math.atan2(uy, ux) / D2R) + ' 0 1 ';
+      return 'M' + pt(p1) + arc + pt(p2) + arc + pt(p1) + 'Z';
+    }
+    function circ(c, r) {
+      return 'M' + pt([c[0] + r, c[1]]) + 'A' + r + ' ' + r + ' 0 0 1 ' + pt([c[0] - r, c[1]]) +
+             'A' + r + ' ' + r + ' 0 0 1 ' + pt([c[0] + r, c[1]]) + 'Z';
+    }
+    var C25 = Math.cos(25 * D2R), S25 = Math.sin(25 * D2R);
+    function dc(B, T, d) {
+      var u = unit(B, T), B1 = add(B, u, 1.5), L = u[2] - 1.5, M = add(B1, u, L * 0.52);
+      var p = [-u[1], u[0]], tv = [p[0] * C25 + u[0] * S25, p[1] * C25 + u[1] * S25];
+      return 'M' + pt(B1) + ' ' + pt(T) + 'M' + pt(add(T, d, -CB)) + ' ' + pt(add(T, d, CB)) +
+             'M' + pt(add(M, tv, -TK)) + ' ' + pt(add(M, tv, TK));
+    }
+    function ch3(B, T) {
+      var u = unit(B, T), B1 = add(B, u, 1.0), L = u[2] - 1.0, s = '';
+      for (var i = 0; i < 3; i++) s += ell(add(B1, u, L * (2 * i + 1) / 6), L / 6 * 0.98, 2.3, u[0], u[1]);
+      return { path: s, mid: add(B1, u, L / 2) };
+    }
+    var ring = '', pv = [];
+    [54, -18, -90, 198, 126].forEach(function (ang) { pv.push([RP * Math.cos(ang * D2R), -RP * Math.sin(ang * D2R)]); });
+    for (var i = 0; i < 5; i++) {
+      var A = pv[i], Bv = pv[(i + 1) % 5], uu = unit(A, Bv);
+      ring += ell([(A[0] + Bv[0]) / 2, (A[1] + Bv[1]) / 2], uu[2] / 2 * 0.9, 2.5, uu[0], uu[1]);
+    }
+    var ringDot = circ([(RP + 4) * Math.cos(54 * D2R), -(RP + 4) * Math.sin(54 * D2R)], DOT);
+    var rounds = [];
+    for (var n = 1; n <= N; n++) {
+      var st = '', chn = '', dots = '', label = null, Lu = 4 * n + 1;
+      for (k = 0; k < 6; k++) {
+        var d = dir[k];
+        chn += ell(P(n, k, 0.6), OVX, OVY, d[0], d[1]);
+        chn += ell(P(n, k, Lu - 0.6), OVX, OVY, d[0], d[1]);
+        for (var j = 0; j < n; j++) {
+          var c = 2.5 + 4 * j, base = null;
+          if (j < n - 1) chn += ell(P(n, k, c + 2), OVX, OVY, d[0], d[1]);
+          if (n > 1) {
+            if (j === 0) base = add(vtx(R(n - 1), k), vdir[k], 1.5);
+            else if (j === n - 1) base = add(vtx(R(n - 1), k + 1), vdir[(k + 1) % 6], 1.5);
+            else base = P(n - 1, k, 4.5 + 4 * (j - 1), OVY + 1.0);
+          }
+          for (var q = -1; q <= 1; q++) {
+            var T = P(n, k, c + q * G), B = base;
+            if (n === 1) { var ru = unit([0, 0], T); B = [ru[0] * (RP + 4.5), ru[1] * (RP + 4.5)]; }
+            if (k === 1 && j === n - 1 && q === -1) {
+              var cs = ch3(B, T);
+              chn += cs.path;
+              label = add(cs.mid, d, -9);
+            } else {
+              st += dc(B, T, d);
+            }
+          }
+        }
+      }
+      var cc = 4 * n - 1.5;
+      dots += circ(P(n, 1, cc - G - 0.3, 5.5), DOT);
+      dots += circ(P(n, 1, cc, 5.5), DOT);
+      dots += circ(P(n, 1, cc + G, 5.5), DOT);
+      dots += circ(P(n, 1, 4 * n - 0.1, 5.5), DOT);
+      rounds.push({ n: n, stitches: st, chains: chn, dots: dots, label: { x: f(label[0]), y: f(label[1]) } });
+    }
+    var RN = R(N), MG = 34;
+    return {
+      N: N, K: K, E: E, ring: ring, ringDot: ringDot, rounds: rounds, R: R,
+      viewBox: [-(RN + MG), -(RN * Math.sqrt(3) / 2 + MG), 2 * (RN + MG), RN * Math.sqrt(3) + 2 * MG].map(f)
+    };
+  }
+
+  function chartToSVG(chart, opt) {
+    var cols = opt.colors, vb = chart.viewBox, out = [];
+    out.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb.join(' ') + '" width="' + opt.width + '" height="' + opt.height + '">');
+    out.push('<rect x="' + vb[0] + '" y="' + vb[1] + '" width="' + vb[2] + '" height="' + vb[3] + '" fill="#ffffff"/>');
+    out.push('<g fill="none" stroke-linecap="round" stroke-linejoin="round">');
+    out.push('<path d="' + chart.ring + '" stroke="' + cols[0] + '" stroke-width="1.2"/><path d="' + chart.ringDot + '" fill="' + cols[0] + '"/>');
+    chart.rounds.forEach(function (r) {
+      var c = cols[(r.n + 1) % 2];
+      out.push('<g stroke="' + c + '"><path d="' + r.stitches + '" stroke-width="1.35"/><path d="' + r.chains + '" stroke-width="1.2"/>' +
+        '<path d="' + r.dots + '" fill="' + c + '" stroke="none"/>' +
+        '<text x="' + r.label.x + '" y="' + r.label.y + '" fill="' + c + '" stroke="none" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="13" dominant-baseline="central">' + r.n + '</text></g>');
+    });
+    out.push('</g></svg>');
+    return out.join('');
+  }
+
+  /* ---------- build the on-screen chart ---------- */
+  var N = 26;
+  var chart = buildGrannyHex(N);
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('chart');
+  function mk(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var a in attrs) e.setAttribute(a, attrs[a]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  var art = mk('g', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, svg);
+  var ringG = mk('g', { 'class': 'ring yarn-a' }, art);
+  mk('path', { 'class': 'ch', d: chart.ring }, ringG);
+  mk('path', { 'class': 'dt', d: chart.ringDot }, ringG);
+  var roundG = chart.rounds.map(function (r) {
+    var g = mk('g', { 'class': 'round ' + (r.n % 2 ? 'yarn-a' : 'yarn-b') }, art);
+    mk('path', { 'class': 'st', d: r.stitches }, g);
+    mk('path', { 'class': 'ch', d: r.chains }, g);
+    mk('path', { 'class': 'dt', d: r.dots }, g);
+    var t = mk('text', { 'class': 'lb', x: r.label.x, y: r.label.y, 'dominant-baseline': 'central' }, g);
+    t.textContent = String(r.n);
+    return g;
+  });
+  var legendRing = document.getElementById('legendRing');
+  mk('path', { d: chart.ring, fill: 'none', stroke: 'currentColor', 'stroke-width': '1.6' }, legendRing);
+
+  /* ---------- pan & zoom ---------- */
+  var viewer = document.getElementById('viewer');
+  var FULL = chart.viewBox;
+  var rect = viewer.getBoundingClientRect();
+  var vb = null;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function ar() { return (rect.width || 1) / (rect.height || 1); }
+  function fitBox() {
+    var w = FULL[2], h = FULL[3], a = ar();
+    if (w / h > a) h = w / a; else w = h * a;
+    return { x: FULL[0] + (FULL[2] - w) / 2, y: FULL[1] + (FULL[3] - h) / 2, w: w, h: h };
+  }
+  var MINW = 150;
+  function maxW() { return fitBox().w * 1.5; }
+  function clampVB(b) {
+    var cx = Math.min(Math.max(b.x + b.w / 2, FULL[0]), FULL[0] + FULL[2]);
+    var cy = Math.min(Math.max(b.y + b.h / 2, FULL[1]), FULL[1] + FULL[3]);
+    return { x: cx - b.w / 2, y: cy - b.h / 2, w: b.w, h: b.h };
+  }
+  var raf = 0;
+  function apply() {
+    if (raf) return;
+    raf = requestAnimationFrame(function () {
+      raf = 0;
+      svg.setAttribute('viewBox', vb.x.toFixed(2) + ' ' + vb.y.toFixed(2) + ' ' + vb.w.toFixed(2) + ' ' + vb.h.toFixed(2));
+      var s = (rect.width || 1) / vb.w;
+      svg.style.setProperty('--k', Math.max(1, 0.75 / (1.35 * s)).toFixed(3));
+      svg.style.setProperty('--kon', Math.max(1, 1.6 / (1.35 * s)).toFixed(3));
+    });
+  }
+  var anim = 0;
+  function setView(target, animate) {
+    if (anim) { cancelAnimationFrame(anim); anim = 0; }
+    target = clampVB(target);
+    if (!animate || reduceMotion || !vb) { vb = target; apply(); return; }
+    var from = vb, t0 = performance.now(), dur = 320;
+    function step(now) {
+      var t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+      vb = { x: from.x + (target.x - from.x) * e, y: from.y + (target.y - from.y) * e,
+             w: from.w + (target.w - from.w) * e, h: from.h + (target.h - from.h) * e };
+      apply();
+      anim = t < 1 ? requestAnimationFrame(step) : 0;
+    }
+    anim = requestAnimationFrame(step);
+  }
+  function zoomAt(px, py, factor, animate) {
+    var w = Math.min(Math.max(vb.w / factor, MINW), maxW()), h = w / ar();
+    var ux = vb.x + px / rect.width * vb.w, uy = vb.y + py / rect.height * vb.h;
+    setView({ x: ux - px / rect.width * w, y: uy - py / rect.height * h, w: w, h: h }, animate);
+  }
+  function toChart(clientX, clientY) {
+    return [vb.x + (clientX - rect.left) / rect.width * vb.w, vb.y + (clientY - rect.top) / rect.height * vb.h];
+  }
+
+  var ro = new ResizeObserver(function () {
+    rect = viewer.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    if (!vb) { setView(fitBox(), false); return; }
+    var cx = vb.x + vb.w / 2, cy = vb.y + vb.h / 2, h = vb.w / ar();
+    setView({ x: cx - vb.w / 2, y: cy - h / 2, w: vb.w, h: h }, false);
+  });
+  ro.observe(viewer);
+
+  viewer.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    rect = viewer.getBoundingClientRect();
+    var dy = e.deltaY;
+    if (e.deltaMode === 1) dy *= 16; else if (e.deltaMode === 2) dy *= rect.height;
+    zoomAt(e.clientX - rect.left, e.clientY - rect.top, Math.exp(-dy * 0.0016), false);
+  }, { passive: false });
+
+  var pts = new Map(), gesture = null;
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+  function startGesture() {
+    var arr = Array.from(pts.values());
+    if (arr.length === 1) {
+      gesture = { type: 'pan', x0: arr[0].x, y0: arr[0].y, vb0: vb, t0: performance.now(), moved: 0 };
+    } else if (arr.length >= 2) {
+      var a = arr[0], b = arr[1];
+      gesture = { type: 'pinch', d0: Math.max(dist(a, b), 1), mx0: (a.x + b.x) / 2, my0: (a.y + b.y) / 2, vb0: vb };
+    }
+  }
+  viewer.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('button')) return;
+    if (e.button !== undefined && e.button > 0) return;
+    rect = viewer.getBoundingClientRect();
+    if (anim) { cancelAnimationFrame(anim); anim = 0; }
+    try { viewer.setPointerCapture(e.pointerId); } catch (err) {}
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    viewer.classList.add('dragging');
+    startGesture();
+  });
+  viewer.addEventListener('pointermove', function (e) {
+    if (!pts.has(e.pointerId) || !gesture) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (gesture.type === 'pan') {
+      var dx = e.clientX - gesture.x0, dy = e.clientY - gesture.y0;
+      gesture.moved = Math.max(gesture.moved, Math.hypot(dx, dy));
+      var g = gesture.vb0;
+      vb = clampVB({ x: g.x - dx * g.w / rect.width, y: g.y - dy * g.h / rect.height, w: g.w, h: g.h });
+      apply();
+    } else {
+      var arr = Array.from(pts.values()), a = arr[0], b = arr[1];
+      var g2 = gesture.vb0, f = dist(a, b) / gesture.d0;
+      var w = Math.min(Math.max(g2.w / f, MINW), maxW()), h = w / ar();
+      var ux = g2.x + (gesture.mx0 - rect.left) / rect.width * g2.w;
+      var uy = g2.y + (gesture.my0 - rect.top) / rect.height * g2.h;
+      var mx = (a.x + b.x) / 2 - rect.left, my = (a.y + b.y) / 2 - rect.top;
+      vb = clampVB({ x: ux - mx / rect.width * w, y: uy - my / rect.height * h, w: w, h: h });
+      apply();
+    }
+  });
+  function endPointer(e) {
+    if (!pts.has(e.pointerId)) return;
+    var wasTap = gesture && gesture.type === 'pan' && pts.size === 1 && gesture.moved < 6 &&
+                 performance.now() - gesture.t0 < 600 && e.type === 'pointerup';
+    pts.delete(e.pointerId);
+    if (wasTap) tapAt(e.clientX, e.clientY);
+    if (pts.size) startGesture(); else { gesture = null; viewer.classList.remove('dragging'); }
+  }
+  viewer.addEventListener('pointerup', endPointer);
+  viewer.addEventListener('pointercancel', endPointer);
+
+  viewer.addEventListener('keydown', function (e) {
+    var step = 0.15;
+    if (e.key === '+' || e.key === '=') zoomAt(rect.width / 2, rect.height / 2, 1.5, true);
+    else if (e.key === '-' || e.key === '_') zoomAt(rect.width / 2, rect.height / 2, 1 / 1.5, true);
+    else if (e.key === '0') setView(fitBox(), true);
+    else if (e.key === 'ArrowLeft') setView({ x: vb.x - vb.w * step, y: vb.y, w: vb.w, h: vb.h }, true);
+    else if (e.key === 'ArrowRight') setView({ x: vb.x + vb.w * step, y: vb.y, w: vb.w, h: vb.h }, true);
+    else if (e.key === 'ArrowUp') setView({ x: vb.x, y: vb.y - vb.h * step, w: vb.w, h: vb.h }, true);
+    else if (e.key === 'ArrowDown') setView({ x: vb.x, y: vb.y + vb.h * step, w: vb.w, h: vb.h }, true);
+    else return;
+    e.preventDefault();
+  });
+
+  document.getElementById('zin').addEventListener('click', function () { rect = viewer.getBoundingClientRect(); zoomAt(rect.width / 2, rect.height / 2, 1.6, true); });
+  document.getElementById('zout').addEventListener('click', function () { rect = viewer.getBoundingClientRect(); zoomAt(rect.width / 2, rect.height / 2, 1 / 1.6, true); });
+  document.getElementById('zfit').addEventListener('click', function () { rect = viewer.getBoundingClientRect(); setView(fitBox(), true); });
+
+  /* ---------- round selection ---------- */
+  var sel = 0;
+  var SQ3 = Math.sqrt(3) / 2;
+  function roundAt(p) {
+    var h = 0;
+    for (var k = 0; k < 6; k++) {
+      var m = (60 * k + 30) * Math.PI / 180;
+      h = Math.max(h, (p[0] * Math.cos(m) - p[1] * Math.sin(m)) / SQ3);
+    }
+    if (h > chart.R(N) + 8) return 0;
+    return Math.min(N, Math.max(1, Math.ceil((h - chart.E - chart.K) / (4 * chart.K))));
+  }
+  function tapAt(cx, cy) {
+    var n = roundAt(toChart(cx, cy));
+    if (!n) { select(0); return; }
+    select(n === sel ? 0 : n);
+  }
+
+  var ticksEl = document.getElementById('ticks');
+  var allBtn = document.createElement('button');
+  allBtn.type = 'button'; allBtn.className = 'all'; allBtn.textContent = 'Все';
+  allBtn.setAttribute('aria-pressed', 'true');
+  allBtn.addEventListener('click', function () { select(0); });
+  ticksEl.appendChild(allBtn);
+  var tickBtns = [];
+  for (var n = 1; n <= N; n++) {
+    (function (n) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tick ' + (n % 2 ? 'a' : 'b') + (n % 5 === 0 ? ' five' : '');
+      b.textContent = String(n);
+      b.setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-label', 'Ряд ' + n);
+      b.addEventListener('click', function () { select(n === sel ? 0 : n); });
+      ticksEl.appendChild(b);
+      tickBtns.push(b);
+    })(n);
+  }
+  document.getElementById('prev').addEventListener('click', function () { select(sel <= 1 ? N : sel - 1); });
+  document.getElementById('next').addEventListener('click', function () { select(sel >= N ? 1 : sel + 1); });
+
+  function plural(n, forms) {
+    var a = n % 100, b = n % 10;
+    if (a > 10 && a < 20) return forms[2];
+    if (b === 1) return forms[0];
+    if (b > 1 && b < 5) return forms[1];
+    return forms[2];
+  }
+  function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+
+  var rcHead = document.getElementById('rcHead'), rcNum = document.getElementById('rcNum'), rcCap = document.getElementById('rcCap');
+  var rcStats = document.getElementById('rcStats'), rcText = document.getElementById('rcText'), rcText2 = document.getElementById('rcText2');
+  var rcActions = document.getElementById('rcActions');
+  var toStart = document.getElementById('toStart'), toStartText = document.getElementById('toStartText');
+  var hint = document.getElementById('hint');
+
+  function setStats(rows) {
+    rcStats.textContent = '';
+    rows.forEach(function (r) {
+      var dt = document.createElement('dt'); dt.textContent = r[0];
+      var dd = document.createElement('dd'); dd.textContent = r[1];
+      rcStats.appendChild(dt); rcStats.appendChild(dd);
+    });
+  }
+
+  function renderCard() {
+    var card = rcNum.parentNode;
+    if (!sel) {
+      rcHead.textContent = 'Мотив целиком';
+      rcNum.textContent = String(N);
+      rcNum.style.removeProperty('--c');
+      rcCap.textContent = plural(N, ['ряд', 'ряда', 'рядов']);
+      setStats([
+        ['ССН во всём мотиве', fmt(18 * N * (N + 1) / 2)],
+        ['ССН в 26-м ряду', fmt(18 * N)],
+        ['групп на стороне в 26-м ряду', String(N)],
+        ['прибавка за ряд', '+18 ССН']
+      ]);
+      rcText.textContent = 'Нажмите на ряд прямо на схеме или выберите номер на линейке сверху, чтобы выделить его.';
+      rcText2.textContent = '';
+      rcText2.hidden = true;
+      rcActions.hidden = true;
+      return;
+    }
+    var n = sel, col = n % 2 ? 'var(--yarn-a)' : 'var(--yarn-b)';
+    rcHead.textContent = 'Выбранный ряд';
+    rcNum.textContent = String(n);
+    rcNum.style.setProperty('--c', col);
+    rcCap.textContent = 'ряд';
+    setStats([
+      ['ССН в ряду', fmt(18 * n)],
+      ['групп по 3 ССН', String(6 * n)],
+      ['на каждой стороне', n + ' ' + plural(n, ['группа', 'группы', 'групп'])],
+      ['арок из 1 в.п.', String(6 * (n - 1))],
+      ['угловых арок из 2 в.п.', '6']
+    ]);
+    if (n === 1) {
+      rcText.textContent = 'Всё вяжется в кольцо: 3 в.п. подъёма и 2 ССН, затем 5 раз по 3 ССН. Между группами по 2 в.п. — это будущие углы.';
+    } else if (n === 2) {
+      rcText.textContent = 'Только угловые веера: в каждую арку из 2 в.п. провязать 3 ССН, 2 в.п., 3 ССН. Между веерами 1 в.п.';
+    } else {
+      var m = n - 2;
+      rcText.textContent = 'Углы: 3 ССН, 2 в.п., 3 ССН в угловую арку. Между углами на каждой стороне ' + m + ' ' +
+        plural(m, ['арка', 'арки', 'арок']) + ' из 1 в.п. предыдущего ряда — в каждую по 3 ССН, группы разделять 1 в.п.';
+    }
+    rcText2.textContent = (n === 1 ? 'Начало: 3 в.п. подъёма в кольцо. ' : 'Начало: 3 в.п. подъёма в левой верхней угловой арке. ') +
+      'Конец: с.с. в 3-ю в.п. подъёма, затем с.с. по 2 ССН и в угловую арку.';
+    rcText2.hidden = false;
+    rcActions.hidden = false;
+  }
+
+  function select(n) {
+    sel = n;
+    svg.classList.toggle('focus', n > 0);
+    roundG.forEach(function (g, i) { g.classList.toggle('on', i + 1 === n); });
+    ringG.classList.toggle('on', n === 1);
+    allBtn.setAttribute('aria-pressed', n ? 'false' : 'true');
+    tickBtns.forEach(function (b, i) { b.setAttribute('aria-pressed', i + 1 === n ? 'true' : 'false'); });
+    if (n) {
+      var tb = tickBtns[n - 1];
+      var left = tb.offsetLeft - ticksEl.clientWidth / 2 + tb.offsetWidth / 2;
+      ticksEl.scrollTo({ left: Math.max(0, left), behavior: reduceMotion ? 'auto' : 'smooth' });
+      toStart.className = 'chip ' + (n % 2 ? 'yarn-a' : 'yarn-b');
+      toStartText.textContent = 'Ряд ' + n + ': к началу';
+      toStart.hidden = false;
+      hint.hidden = true;
+    } else {
+      toStart.hidden = true;
+    }
+    renderCard();
+  }
+
+  function goToStart() {
+    if (!sel) return;
+    rect = viewer.getBoundingClientRect();
+    var lab = chart.rounds[sel - 1].label;
+    var s = Math.min(Math.max(rect.width / 560, 1.0), 2.0);
+    var w = rect.width / s, h = w / ar();
+    var cx = lab.x - 14, cy = lab.y + 6;
+    setView({ x: cx - w / 2, y: cy - h / 2, w: w, h: h }, true);
+  }
+  toStart.addEventListener('click', goToStart);
+  document.getElementById('goStart').addEventListener('click', function () {
+    goToStart();
+    if (window.matchMedia('(max-width: 960px)').matches) viewer.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+  });
+  document.getElementById('clearSel').addEventListener('click', function () { select(0); });
+
+  renderCard();
+
+  /* ---------- saving files ---------- */
+  var dlCard = document.getElementById('dl'), dlStatus = document.getElementById('dlStatus');
+  var savePngBtn = document.getElementById('savePng'), saveSvgBtn = document.getElementById('saveSvg');
+  var downloads = null;
+  try {
+    if (window.claude && typeof window.claude.use === 'function') {
+      window.claude.use('downloads').then(function (d) { downloads = d; dlCard.hidden = !d; }, function () {});
+    }
+  } catch (err) {}
+
+  var LIGHT = ['#1c1d1f', '#b3242c'];
+  function svgString(w) {
+    var h = Math.round(w * FULL[3] / FULL[2]);
+    return { str: chartToSVG(chart, { colors: LIGHT, width: w, height: h }), w: w, h: h };
+  }
+  function makePng() {
+    var s = svgString(3800);
+    var url = URL.createObjectURL(new Blob([s.str], { type: 'image/svg+xml' }));
+    var img = new Image();
+    return new Promise(function (resolve, reject) {
+      img.onload = function () {
+        try {
+          var c = document.createElement('canvas');
+          c.width = s.w; c.height = s.h;
+          var ctx = c.getContext('2d');
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, s.w, s.h);
+          ctx.drawImage(img, 0, 0, s.w, s.h);
+          URL.revokeObjectURL(url);
+          c.toBlob(function (b) { b ? resolve(b) : reject(new Error('png')); }, 'image/png');
+        } catch (err) { URL.revokeObjectURL(url); reject(err); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('img')); };
+      img.src = url;
+    });
+  }
+  function explain(err) {
+    var code = err && err.code;
+    if (code === 'declined') return 'Сохранение отменено.';
+    if (code === 'rate_limited') return 'Окно сохранения уже открыто — подтвердите его или попробуйте через пару секунд.';
+    return 'В этом окне не получилось сохранить файл.';
+  }
+  function save(kind) {
+    if (!downloads) return;
+    savePngBtn.disabled = saveSvgBtn.disabled = true;
+    dlStatus.textContent = kind === 'png' ? 'Готовлю картинку…' : 'Готовлю файл…';
+    var job = kind === 'png'
+      ? makePng().then(function (blob) { return downloads.save({ filename: 'shestiugolnik-26-ryadov.png', data: blob }); })
+      : downloads.save({ filename: 'shestiugolnik-26-ryadov.svg', data: new Blob([svgString(Math.round(FULL[2])).str], { type: 'image/svg+xml' }) });
+    job.then(function (res) {
+      dlStatus.textContent = res && res.status === 'saved' ? 'Файл сохранён.' : '';
+    }, function (err) {
+      dlStatus.textContent = explain(err);
+    }).then(function () { savePngBtn.disabled = saveSvgBtn.disabled = false; });
+  }
+  savePngBtn.addEventListener('click', function () { save('png'); });
+  saveSvgBtn.addEventListener('click', function () { save('svg'); });
+})();
+</script>
+
+</body></html>
